@@ -29,43 +29,58 @@ class Subscriber
   include Celluloid
   include Celluloid::Notifications
   finalizer :finalizer
+  exclusive :add_stream, :del_stream
 
   def initialize
     @ios = []
-  end
-
-  def handle(stream)
-    @io = stream
-    send_headers
     subscribe(/message/, :receive)
   end
 
-  def send_headers
-    @io << "HTTP 200 OK\r\n"
-    @io << "Content-Type: text/event-stream\r\n"
-    @io << "Transfer-Encoding: identity\r\n"
-    @io << "Cache-Control: no-cache\r\n"
-    @io << "\r\n"
-    @io.flush
+  def handle(stream)
+    io = stream
+    send_headers(io)
+    add_stream(io)
+  end
+
+  def send_headers(io)
+    io << "HTTP 200 OK\r\n"
+    io << "Content-Type: text/event-stream\r\n"
+    io << "Transfer-Encoding: identity\r\n"
+    io << "Cache-Control: no-cache\r\n"
+    io << "\r\n"
+    io.flush
   end
 
   def receive(event, payload)
-    LOGGER.info("current: #{current_actor}, stream: #{@io.object_id}, event: #{event}, data: #{payload}, closed: #{@io.closed?}")
-    begin
-      raise SocketError, "Closed" if @io.closed?
-      @io << "event: #{event}\n"
-      @io << "data: #{payload}\n\n"
-      @io.flush
-    rescue => x
-      LOGGER.info("stream: #{@io.object_id} is dead, unsubscribing because #{x.message}")
-      unsubscribe self
-      terminate
+    LOGGER.info("current: #{current_actor}, streams: #{@ios.count}, event: #{event}, data: #{payload}")
+    @ios.each do |io|
+      begin
+        raise SocketError, "Closed" if io.closed?
+        io << "event: #{event}\n"
+        io << "data: Stream #{io.object_id}: #{payload}\n\n"
+        io.flush
+      rescue => x
+        LOGGER.info("stream: #{io.object_id} is dead: #{x.message}")
+        del_stream(io)
+      end
     end
   end
 
+  def add_stream(io)
+    LOGGER.info("new stream added #{io.object_id}, streams: #{@ios.count}")
+    @ios << io
+  end
+
+  def del_stream(io)
+    @ios.delete io
+  end
+
   def finalizer
-    LOGGER.info("stream: #{@io.object_id} finalizer, closed: #{@io.closed?}")
-    @io.close unless @io.closed?
+    LOGGER.info("[finalizer] streams: #{@ios.count}")
+    ios.each do |io|
+      io.close unless io.closed? rescue nil
+    end
+    unsubscribe self
   end
 end
 
@@ -102,8 +117,8 @@ class Server < Sinatra::Base
 
   get '/stream' do
     io = env['rack.hijack'].call
-    #subscriber_pool.async.handle(io)
-    Subscriber.new.async.handle(io)
+    subscriber_pool.async.handle(io)
+    #Subscriber.new.async.handle(io)
   end
 
   get '/pool' do
