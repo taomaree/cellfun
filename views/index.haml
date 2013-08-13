@@ -1,0 +1,20 @@
+%html{"ng-app"=>""}
+  %head
+    %title Fun with Celluloid
+    %script(src = "http://ajax.googleapis.com/ajax/libs/angularjs/1.0.3/angular.js")
+    :javascript
+      function messenger($scope) {
+        $scope.message = "";
+        var onMessage = function(e) {
+          $scope.$apply(function() { $scope.message = e.data });
+          console.log('Message received: ' + e.data)
+        }
+
+        var s = new EventSource('/stream');
+        s.addEventListener('message', onMessage, false);
+      }
+  %body
+    %h1 Fun with Celluloid?
+    %p{"ng-controller" => "messenger"}
+      Message: {{message || "waiting..."}}.
+
