@@ -12,7 +12,7 @@
           console.log('Message received: ' + e.data)
         }
 
-        var s = new EventSource('stream');
+        var s = new EventSource('stream', { withCredentials: true });
         s.addEventListener('message', onMessage, false);
       }
   %body
