@@ -38,32 +38,44 @@ class Subscriber
 
   def handle(stream)
     io = stream
-    send_headers(io)
-    add_stream(io)
+    begin
+      send_headers(io)
+      add_stream(io)
+    rescue
+      LOGGER.error("Failed to establish streaming connection to #{io.object_id}")
+    end
   end
 
   def send_headers(io)
+    LOGGER.info("Sending headers to #{io.object_id}")
     io << "HTTP 200 OK\r\n"
     io << "Content-Type: text/event-stream\r\n"
     io << "Transfer-Encoding: identity\r\n"
     io << "Cache-Control: no-cache\r\n"
+    # io << "Access-Control-Allow-Origin: *\r\n"
+    io << "Access-Control-Allow-Origin: http://localhost:3000"
     io << "\r\n"
+    io << ':' << (' ' * 2049) << "\n"
+    io << "retry: 2000\n"
     io.flush
   end
 
   def receive(event, payload)
-    LOGGER.info("current: #{current_actor}, streams: #{@ios.count}, event: #{event}, data: #{payload}")
-    @ios.each do |io|
+    closed = @ios.select do |io|
       begin
         raise SocketError, "Closed" if io.closed?
         io << "event: #{event}\n"
         io << "data: Stream #{io.object_id}: #{payload}\n\n"
         io.flush
+        false
       rescue => x
         LOGGER.info("stream: #{io.object_id} is dead: #{x.message}")
-        del_stream(io)
+        true
       end
     end
+
+    closed.each { |io| del_stream(io) }
+    LOGGER.info("current: #{current_actor}, streams: #{@ios.count}, event: #{event}, data: #{payload}")
   end
 
   def add_stream(io)
@@ -77,7 +89,7 @@ class Subscriber
 
   def finalizer
     LOGGER.info("[finalizer] streams: #{@ios.count}")
-    ios.each do |io|
+    @ios.each do |io|
       io.close unless io.closed? rescue nil
     end
     unsubscribe self

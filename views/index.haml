@@ -2,6 +2,8 @@
   %head
     %title Fun with Celluloid
     %script(src = "http://ajax.googleapis.com/ajax/libs/angularjs/1.0.3/angular.js")
+    /%script(src = "/remy-eventsource.js")
+    %script(src = "/yaffle-eventsource.js")
     :javascript
       function messenger($scope) {
         $scope.message = "";
@@ -10,7 +12,7 @@
           console.log('Message received: ' + e.data)
         }
 
-        var s = new EventSource('/stream');
+        var s = new EventSource('http://localhost:3000/stream');
         s.addEventListener('message', onMessage, false);
       }
   %body
