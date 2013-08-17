@@ -12,7 +12,7 @@
           console.log('Message received: ' + e.data)
         }
 
-        var s = new EventSource('http://localhost:3000/stream');
+        var s = new EventSource('stream');
         s.addEventListener('message', onMessage, false);
       }
   %body
