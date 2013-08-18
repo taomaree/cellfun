@@ -49,12 +49,10 @@ class Subscriber
   def send_headers(io)
     LOGGER.info("Sending headers to #{io.object_id}")
     io << "HTTP/1.1 200 OK\r\n"
-    #io << "Content-Type: text/event-stream\r\n"
     io << "Content-Type: text/event-stream;charset=utf-8\r\n"
     io << "Transfer-Encoding: identity\r\n"
     io << "Cache-Control: no-cache\r\n"
     io << "Access-Control-Allow-Origin: *\r\n"
-    #io << "Access-Control-Allow-Origin: http://localhost:3000"
     io << "\r\n"
     io << ':' << (' ' * 2049) << "\n"
     io << "retry: 2000\n"
