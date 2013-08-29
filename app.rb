@@ -8,20 +8,12 @@ require 'sinatra/base'
 LOGGER = Logger.new($stdout)
 LOGGER.progname = 'cellfun'
 
-class Counter
+class Presenter
   include Celluloid
   include Celluloid::Notifications
 
-  attr_reader :count
-
-  def initialize
-    @count = 0
-  end
-
-  def increment
-    exclusive { @count += 1 }
-    LOGGER.info "Count is now #{@count}"
-    publish('message', "Count is now #{@count}")
+  def present(msg)
+    publish('message', msg)
   end
 end
 
@@ -96,8 +88,8 @@ class Subscriber
 end
 
 class Server < Sinatra::Base
-  Celluloid::Actor[:counter] = Counter.new
-  Celluloid::Actor[:subscriber_pool] = Subscriber.new
+  Celluloid::Actor[:presenter] = Presenter.new
+  Celluloid::Actor[:subscriber] = Subscriber.new
 
   configure do
     set :app_file, __FILE__
@@ -111,29 +103,22 @@ class Server < Sinatra::Base
   end
 
   helpers do
-    def counter
-      Celluloid::Actor[:counter]
+    def presenter
+      Celluloid::Actor[:presenter]
     end
 
-    def subscriber_pool
-      Celluloid::Actor[:subscriber_pool]
+    def subscriber
+      Celluloid::Actor[:subscriber]
     end
   end
 
-  get '/increment/?' do
-    by = (params[:by] || 1).to_i
-    by.times { counter.async.increment }
-    "[Count] currently: #{counter.count.to_s}"
+  get '/present/:msg/?' do
+    presenter.async.present(params[:msg])
   end
 
   get '/stream' do
     io = env['rack.hijack'].call
-    subscriber_pool.async.handle(io)
-    #Subscriber.new.async.handle(io)
-  end
-
-  get '/pool' do
-    "[Subscriber Pool] busy: #{subscriber_pool.busy_size}, idle: #{subscriber_pool.idle_size}"
+    subscriber.async.handle(io)
   end
 
   get '/' do

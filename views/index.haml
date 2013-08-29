@@ -8,7 +8,6 @@
         $scope.message = "";
         var onMessage = function(e) {
           $scope.$apply(function() { $scope.message = e.data });
-          console.log('Message received: ' + e.data)
         }
 
         var s = new EventSource('stream', { withCredentials: true });
