@@ -34,7 +34,8 @@ browser, or curl, or whatever you'd like with a GET request to http://localhost:
 where <msg> is any text you'd like to see presented.
 
 Now attach as many browsers as you can find to listen. I've forked 200 curl processes to the SSE
-route (http://localhost:3000/stream) without any issues.
+route (http://localhost:3000/stream) while pumping messages with ab -n 1000 -c 50; all without any 
+issues.
 
 Note: 
 -----
