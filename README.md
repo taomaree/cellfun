@@ -41,7 +41,7 @@ Note:
 
 If this is interesting to you and you aren't locked into a legacy-ish application then you may
 be more interested in looking at [Reel](https://github.com/celluloid/reel) which is a standalone 
-web application framework with a syntax familiar with Sinatra but already has Celluloid in its
+web application framework with a syntax similar to Sinatra but already has Celluloid in its
 DNA.
 
 
