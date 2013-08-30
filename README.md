@@ -30,11 +30,11 @@ $ bundle exec puma --port 3000
 
 When the app starts up, point your browser to http://localhost:3000/. It should establish an
 SSE connection at that point by hijacking the socket from Puma. Next, send a message from another
-browser, or curl, or whatever you'd like with a GET request to http://localhost:3000/preent/<msg> 
-where <msg> is any text you'd like to see presented.
+browser, or curl, or whatever you'd like with a GET request to http://localhost:3000/present/:msg 
+where :msg is any text you'd like to see presented to the attached clients.
 
-Now attach as many browsers as you can find to listen. I've forked 200 curl processes to the SSE
-route (http://localhost:3000/stream) while pumping messages with ab -n 1000 -c 50; all without any 
+Now attach as many browsers or tabs to attach and listen. I've forked 200 curl processes to the SSE
+route (curl http://localhost:3000/stream) while pumping messages with ab -n 1000 -c 50; all without any 
 issues.
 
 Note: 
