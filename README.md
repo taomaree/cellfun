@@ -14,6 +14,11 @@ Full stack:
 * [JRuby](http://jruby.org) 1.7.x
 * [OpenJDK](http://openjdk.java.net/) 7
 
+Other tools used:
+
+* [EventSource Polyfill](https://github.com/Yaffle/EventSource) from Yaffle.
+* [AngularJS](http://angularjs.org/) is overkill here but I like it. So there!
+
 In action
 ---------
 To see this in action:
